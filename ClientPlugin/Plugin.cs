@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reflection;
+using ClientPlugin.MiscPatches;
+using ClientPlugin.Pulsar_Patches;
 using ClientPlugin.Settings;
 using ClientPlugin.Settings.Layouts;
 using HarmonyLib;
@@ -9,47 +11,49 @@ using VRage.Plugins;
 namespace ClientPlugin
 {
     // ReSharper disable once UnusedType.Global
-    public class Plugin : IPlugin, IDisposable
+    public class Plugin : IPlugin
     {
-        public const string Name = "ClientPluginTemplate";
+        private static Action<string, NLog.LogLevel> PulsarLog;
+        
+        public static readonly string PluginName = ((AssemblyTitleAttribute)Attribute.GetCustomAttribute(
+            Assembly.GetExecutingAssembly(), typeof(AssemblyTitleAttribute))).Title;
+        public static void WriteToPulsarLog(string logMsg, NLog.LogLevel logLevel)
+        {
+            PulsarLog?.Invoke($"[{PluginName}] {logMsg}", logLevel);
+        }
+        
+        // ReSharper disable once MemberCanBePrivate.Global
         public static Plugin Instance { get; private set; }
-        private SettingsGenerator settingsGenerator;
+        // ReSharper disable once NotAccessedField.Local
+        private SettingsGenerator _settingsGenerator;
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         public void Init(object gameInstance)
         {
+            ConsoleManager.Init();
             Instance = this;
-            Instance.settingsGenerator = new SettingsGenerator();
+            Instance._settingsGenerator = new SettingsGenerator();
 
-            // TODO: Put your one time initialization code here.
-            Harmony harmony = new Harmony(Name);
-            harmony.PatchAll(Assembly.GetExecutingAssembly());
+            Harmony harmony = new Harmony(PluginName);
+            PatchPulsarLogs.Patch(harmony);
+            PatchMisc.Patch(harmony);
         }
 
         public void Dispose()
         {
-            // TODO: Save state and close resources here, called when the game exits (not guaranteed!)
-            // IMPORTANT: Do NOT call harmony.UnpatchAll() here! It may break other plugins.
-
             Instance = null;
         }
 
         public void Update()
         {
-            // TODO: Put your update code here. It is called on every simulation frame!
+            ConsoleManager.Update();
         }
 
         // ReSharper disable once UnusedMember.Global
         public void OpenConfigDialog()
         {
-            Instance.settingsGenerator.SetLayout<Simple>();
-            MyGuiSandbox.AddScreen(Instance.settingsGenerator.Dialog);
+            Instance._settingsGenerator.SetLayout<Simple>();
+            MyGuiSandbox.AddScreen(Instance._settingsGenerator.Dialog);
         }
-
-        //TODO: Uncomment and use this method to load asset files
-        /*public void LoadAssets(string folder)
-        {
-
-        }*/
     }
 }
