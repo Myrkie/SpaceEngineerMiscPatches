@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using ClientPlugin.Pulsar_Patches;
+using ClientPlugin.Settings.Tools;
+using VRage.Input;
 
 
 namespace ClientPlugin
@@ -17,12 +19,27 @@ namespace ClientPlugin
 
         [Separator("Settings")]
         
-
         [Button(description: "Toggle stdout Console")]
         public void ToggleConsole()
         {
             ConsoleManager.ToggleConsole();
         }
+        
+        [Separator("Custom Hotkeys")]
+        
+        [Keybind(description: "Console Keybind.")]
+        public Binding ConsoleKeyBind
+        {
+            get;
+            set => SetField(ref field, value);
+        } = new(MyKeys.OemTilde, false, true);
+
+        [Checkbox(description: "Open console on game start.")]
+        public bool AutoOpen
+        {
+            get;
+            set => SetField(ref field, value);
+        } = false;
 
         #endregion
 

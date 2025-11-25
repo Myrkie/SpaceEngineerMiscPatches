@@ -33,13 +33,19 @@ namespace ClientPlugin.Pulsar_Patches
             _consoleVisible = false;
 
             Plugin.WriteToPulsarLog("Console initialized", NLog.LogLevel.Info);
+
+            if (!Config.Current.AutoOpen) return;
+            ToggleConsole();
+            Plugin.WriteToPulsarLog("Auto opening console.", NLog.LogLevel.Debug);
         }
 
         private static bool _allowConsole;
         private static bool _allowConsoleLastFrame;
         public static void Update()
         {
-            bool altTilda = MyInput.Static.IsAnyAltKeyPressed() && MyInput.Static.IsKeyPress(MyKeys.OemTilde);
+            var input = MyInput.Static;
+            
+            bool altTilda = Config.Current.ConsoleKeyBind.IsPressed(input);
             if (altTilda && !_allowConsoleLastFrame)
             {
                 _allowConsole = !_allowConsole;
